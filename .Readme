@@ -2,3 +2,5 @@
 2. env/Scripts/activate
 3. pip install django
 4. pip install mysqlclient
+5. pip install PyJWT
+6. pip install jwt
