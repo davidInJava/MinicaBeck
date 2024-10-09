@@ -26,7 +26,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+AUTH_USER_MODEL = 'profileUser.User'
 # Application definition
 
 INSTALLED_APPS = [
@@ -76,7 +76,7 @@ WSGI_APPLICATION = 'Monica.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'dl',
+        'NAME': 'monica',
         'USER': 'root',
         'PASSWORD': 'davit',
         'HOST': 'localhost',
