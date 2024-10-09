@@ -1,0 +1,32 @@
+
+# Python
+*.py[cod]
+__pycache__/
+*.pyo
+*.pyd
+
+
+
+# Django
+*.log
+*.pot
+*.pyc
+*.egg-info/
+dist/
+build/
+media/
+
+# Environment
+env/
+venv/
+ENV/
+.venv/
+
+# VS Code
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Other
+*.swp
