@@ -8,7 +8,7 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 import jwt
 from django.db import connection
-
+from .models import Chat
 
 # Create your views here.
 def index(request):
@@ -114,3 +114,48 @@ def find_user(request):
             rows = cursor.fetchall()
             return JsonResponse({'users': rows}, status=200)
         return HttpResponse("Method not allowed", status=405)
+
+
+
+@csrf_exempt
+def get_chat(request):
+    if request.method == 'POST':
+        token = request.META.get('HTTP_AUTHORIZATION')  # Extract the token from the header
+        if token and token.startswith('Bearer '):
+            token = token.split(' ')[1]  # Remove 'Bearer ' from the token
+            try:
+                decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+                user1_nickname = decoded['nickname']
+                obj = request.body.decode('utf-8')
+                obj = json.loads(obj)
+                user2_nickname = obj["user2"]
+
+                if user1_nickname == user2_nickname:
+                    return JsonResponse({'error': 'You cannot chat with yourself.'}, status=400)
+
+                # Check if the chat already exists
+                existing_chat = Chat.objects.filter(
+                    user1__nickname=user1_nickname,
+                    user2__nickname=user2_nickname
+                ).first()
+
+                if existing_chat:
+                    return JsonResponse({'chat_id': existing_chat.uid, 'message': 'Chat already exists.'}, status=200)
+
+                # Create a new chat if it doesn't exist
+                new_chat = Chat.objects.create_chat(user1_nickname, user2_nickname, f"Chat between {user1_nickname} and {user2_nickname}")
+
+                return JsonResponse({'chat_id': new_chat.uid, 'message': 'New chat created.'}, status=201)
+
+            except jwt.ExpiredSignatureError:
+                return JsonResponse({'error': 'Token has expired.'}, status=401)
+            except jwt.DecodeError:
+                return JsonResponse({'error': 'Invalid token.'}, status=401)
+            except KeyError as e:
+                return JsonResponse({'error': f'Missing parameter: {str(e)}'}, status=400)
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+

@@ -77,3 +77,6 @@ class Chat(models.Model):
 
     def __str__(self):
         return f'Chat between {self.user1.nickname} and {self.user2.nickname}'
+
+
+

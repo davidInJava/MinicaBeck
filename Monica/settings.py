@@ -27,7 +27,6 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'profileUser.User'
-# Application definitionfsett
 
 INSTALLED_APPS = [
     'daphne',
@@ -80,7 +79,7 @@ CHANNEL_LAYERS = {
 }
 ASGI_APPLICATION = 'Monica.asgi.application'
 CORS_ALLOW_ALL_ORIGINS = True
-# Database
+
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {

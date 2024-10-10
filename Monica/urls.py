@@ -11,5 +11,6 @@ urlpatterns = [
     path('login/',authorisation),
     path('register/', register),
     path('authorisation/', authorisation),
-    path('find_user/', find_user)
+    path('find_user/', find_user),
+    path('new_chat/', get_chat)
 ]
