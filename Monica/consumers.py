@@ -6,9 +6,15 @@ from channels.db import database_sync_to_async
 from django.conf import settings
 from profileUser.models import User
 import jwt
-class YourConsumer(AsyncConsumer):
 
+
+class YourConsumer(AsyncConsumer):
     channel_layer = get_channel_layer()
+    uid_chat = None
+
+    @database_sync_to_async
+    def get_user(self, user_id):
+        return User.objects.get(id=user_id)
 
     async def authenticate_user(self, token):
         try:
@@ -20,43 +26,39 @@ class YourConsumer(AsyncConsumer):
             print(f"Authentication failed: {e}")
             return None
 
-    @database_sync_to_async
-    def get_user(self, user_id):
-        return User.objects.get(id=user_id)
-    print(channel_layers)
     async def websocket_connect(self, event):
         query_string = self.scope['query_string'].decode('utf-8')
-        token = None
-        for param in query_string.split('&'):
-            if param.startswith('token='):
-                token = param.split('=')[1]
-                break
+        params = {param.split('=')[0]: param.split('=')[1] for param in query_string.split('&')}
 
+        token = params.get('token')
+        chat_uid = params.get('chatuid')
+        print(token)
         user1 = await self.authenticate_user(token)
         self.scope["user"] = user1
-        print(self.scope["user"])
-        await self.channel_layer.group_add("chat", self.channel_name)
+        self.uid_chat = chat_uid
+        await self.channel_layer.group_add( f'chat_{self.uid_chat}', self.channel_name)
         await self.send({"type": "websocket.accept"})
 
     async def websocket_receive(self, text_data):
+        print("111111111111111")
+        # data = json.loads(text_data)
+        print(json.loads(text_data['text'])['message'], self.uid_chat)
+
         await self.channel_layer.group_send(
-            "chat",
-            {
-                "type": "chat_message",
-                "message": text_data,
+            f'chat_{self.uid_chat}',  # Имя группы
+            {  # Сообщение
+                'type': 'chat_message',
+                'chat_uid': self.uid_chat,
+                'message': json.loads(text_data['text'])['message']
             }
         )
 
     async def chat_message(self, event):
-
-        event = event["message"]['text']
-        my_dict = json.loads(event)
-        print(my_dict['message'])
-
+        print("Sending message:", event)
         await self.send({
             "type": "websocket.send",
-            "text": my_dict['message']
+            "text": event['message']
         })
 
     async def websocket_disconnect(self, event):
-        await self.channel_layer.group_discard("chat", self.channel_name)
+        pass

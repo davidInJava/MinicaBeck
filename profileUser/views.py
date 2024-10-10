@@ -144,7 +144,7 @@ def get_chat(request):
 
                 # Create a new chat if it doesn't exist
                 new_chat = Chat.objects.create_chat(user1_nickname, user2_nickname, f"Chat between {user1_nickname} and {user2_nickname}")
-
+                print(new_chat, '1213123')
                 return JsonResponse({'chat_id': new_chat.uid, 'message': 'New chat created.'}, status=201)
 
             except jwt.ExpiredSignatureError:

@@ -5,8 +5,12 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+from django.http import JsonResponse
+
 from profileUser.managers import UserManager, ChatManager
 import jwt
+
+
 
 
 
@@ -77,6 +81,33 @@ class Chat(models.Model):
 
     def __str__(self):
         return f'Chat between {self.user1.nickname} and {self.user2.nickname}'
+class MessageChat(models.Manager):
+    use_in_migrations = True
+
+    def new_message(self, uid_chat, nickname, text):
+        try:
+            chat = Chat.objects.get(uid=uid_chat)
+            if nickname in [chat.user1.nickname, chat.user2.nickname]:
+                new_message = self.create(
+                    uid_Chat=chat,
+                    user_nickname=nickname,
+                    text=text
+                )
+                return new_message
+            return JsonResponse({'error': 'Вы не можете отправить сообщение в этот чат'}, status=400)
+        except Chat.DoesNotExist:
+            return JsonResponse({'error': 'Не найден такой чат'}, status=400)
 
 
+class Messages(models.Model):
+    uid_Chat = models.ForeignKey('Chat', on_delete=models.CASCADE, null=False, to_field='uid')
+    user_nickname = models.CharField(max_length=255, null=False, unique=True)
+    date = models.DateTimeField(auto_now_add=True)
+    text = models.TextField()
+
+    objects = MessageChat()
+
+
+    def __str__(self):
+        return self.text
 

@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.http import JsonResponse
+
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
@@ -45,8 +46,16 @@ class ChatManager(models.Manager):
                 user1__nickname=user1_nickname,
                 user2__nickname=user2_nickname
             ).first()
-            if existing_chat:
-                return existing_chat
+            existing_chat1 = self.filter(
+                user1__nickname=user2_nickname,
+                user2__nickname=user1_nickname
+            ).first()
+            if existing_chat or existing_chat1:
+                print(existing_chat1)
+                if existing_chat:
+                    return existing_chat
+                else:
+                    return existing_chat1
 
             new_chat = self.create(
                 name=name,
