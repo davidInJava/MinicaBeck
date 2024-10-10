@@ -7,7 +7,7 @@ import json
 
 from django.views.decorators.csrf import csrf_exempt
 import jwt
-
+from django.db import connection
 
 
 # Create your views here.
@@ -101,3 +101,16 @@ def get_user(request):
             return JsonResponse({'error': 'Authorization header missing or malformed.'}, status=400)
 
     return HttpResponse("Method not allowed", status=405)
+
+
+@csrf_exempt
+def find_user(request):
+    if request.method == 'POST':
+        obj = request.body.decode('utf-8')
+        obj = json.loads(obj)
+        nickname = obj["nickname"]
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT (nickname) FROM profileuser_user WHERE nickname LIKE '%{nickname}%' LIMIT 5")
+            rows = cursor.fetchall()
+            return JsonResponse({'users': rows}, status=200)
+        return HttpResponse("Method not allowed", status=405)

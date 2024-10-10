@@ -11,5 +11,5 @@ urlpatterns = [
     path('login/',authorisation),
     path('register/', register),
     path('authorisation/', authorisation),
-    path('', index)
+    path('find_user/', find_user)
 ]
