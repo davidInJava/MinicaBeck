@@ -54,7 +54,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
         token = jwt.encode({
             'id': self.pk,
-            'exp': dt.timestamp(),  # Используем метод timestamp(),
+            'exp': dt.timestamp(),  # Используем метод timestamp(),s
             'nickname': self.nickname,
         }, settings.SECRET_KEY, algorithm='HS256')
 

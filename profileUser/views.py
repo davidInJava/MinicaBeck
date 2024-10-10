@@ -20,8 +20,16 @@ def register(request):
         obj = request.body.decode('utf-8')
         obj = json.loads(obj)
         nickname = obj["nickname"]
-        phone = obj["phone"]
-        email = obj["email"]
+        if "phone" in obj.keys():
+            phone = obj["phone"]
+        else:
+            phone = None
+        if "email" in obj.keys():
+            email = obj["email"]
+        else:
+            email = None
+        if "phone" not in obj.keys() and "email" not in obj.keys():
+            raise ValueError("Хотя бы одно из полей email или телефон должно быть заполнено")
         role = obj["role"]
         password = obj["password"]
 
@@ -89,7 +97,6 @@ def get_user(request):
                 # Возвращаем данные о пользователе
                 return JsonResponse({
                     'nickname': user.nickname,
-                    'email': user.email,
                     'role': user.role
                 })
             except jwt.ExpiredSignatureError:
