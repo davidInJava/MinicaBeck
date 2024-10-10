@@ -8,7 +8,7 @@ from profileUser.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/',get_user),
+    path('login/',authorisation),
     path('register/', register),
     path('authorisation/', authorisation),
     path('', index)

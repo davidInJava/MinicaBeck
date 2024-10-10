@@ -24,7 +24,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['role']
 
     def __str__(self):
-        return self.nickname + ' ' + self.email
+        if (self.email is not None):
+            return self.nickname + ' ' + self.email
+        else:
+            return self.nickname
+
     def set_token(self, token):
         print("set_token", token)
         self._token = token

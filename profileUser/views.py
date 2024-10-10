@@ -20,19 +20,18 @@ def register(request):
         obj = request.body.decode('utf-8')
         obj = json.loads(obj)
         nickname = obj["nickname"]
-        if "phone" in obj.keys():
-            phone = obj["phone"]
+        if "number_phone" in obj.keys():
+            phone = obj["number_phone"]
         else:
             phone = None
         if "email" in obj.keys():
             email = obj["email"]
         else:
             email = None
-        if "phone" not in obj.keys() and "email" not in obj.keys():
+        if "number_phone" not in obj.keys() and "email" not in obj.keys():
             raise ValueError("Хотя бы одно из полей email или телефон должно быть заполнено")
         role = obj["role"]
         password = obj["password"]
-
         User = get_user_model()
         try:
             new_user = User.objects.create_user(nickname=nickname, number_phone=phone, email=email, role=role, password=password)
@@ -51,31 +50,22 @@ def register(request):
 @csrf_exempt
 def authorisation(request):
     if request.method == 'POST':
+        print(1111111)
         obj = request.body.decode('utf-8')
         obj = json.loads(obj)
-        login = obj["login"]
-        phone = obj["phone"]
+        nickname = obj["nickname"]
+        print(1111111)
         password = obj["password"]
-        token = obj["token"]
         User = get_user_model()
         try:
-            print(type(token))
-            user = User.objects.get(number_phone=phone)
-            user.set_token(token)
-            print(user.token)
-            print(user.nickname)
-            print(user.email)
-            print("Проверка совпадений",check_password(password, user.password))
+            user = User.objects.get(nickname=nickname)
+            print(user)
             if check_password(password, user.password):
-                return HttpResponse(user.token, status=200)
+                return JsonResponse({'token': user.token}, status=201)
             else:
-                return HttpResponse(json.dumps({"error": "Неверный логин или пароль"}), status=401)
-            # return user.token(token = token)
-            # Пользователь найден, авторизация прошла успешно
-            # ... ваш код для успешной авторизации
+                return JsonResponse({"error": "Неверный логин или пароль"}, status=401)
         except User.DoesNotExist:
-            # Пользователь не найден, авторизация не прошла
-            return HttpResponse(json.dumps({"error": "Неверный логин или пароль"}), status=401)
+            return JsonResponse({"error": "Неверный логин или пароль"}, status=401)
 
 
 @csrf_exempt
@@ -85,7 +75,7 @@ def get_user(request):
         if token and token.startswith('Bearer '):
             token = token.split(' ')[1]  # Убираем 'Bearer ' из токена
             try:
-                # Декодируем токен и получаем полезную нагрузку
+
                 decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
 
                 user_id = decoded['id']  # Извлекаем идентификатор пользователя
