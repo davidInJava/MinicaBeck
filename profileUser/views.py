@@ -1,11 +1,14 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 import json
 
 from django.views.decorators.csrf import csrf_exempt
 import jwt
+
+
 
 # Create your views here.
 def index(request):
@@ -17,13 +20,14 @@ def register(request):
         obj = request.body.decode('utf-8')
         obj = json.loads(obj)
         nickname = obj["nickname"]
+        phone = obj["phone"]
         email = obj["email"]
         role = obj["role"]
         password = obj["password"]
 
         User = get_user_model()
         try:
-            new_user = User.objects.create_user(nickname=nickname, email=email, role=role, password=password)
+            new_user = User.objects.create_user(nickname=nickname, number_phone=phone, email=email, role=role, password=password)
             new_user.save()
 
             d = User.objects.get(nickname=nickname)
@@ -35,6 +39,35 @@ def register(request):
             return JsonResponse({'error': str(e)}, status=400)
 
     return HttpResponse("Method not allowed", status=405)
+
+@csrf_exempt
+def authorisation(request):
+    if request.method == 'POST':
+        obj = request.body.decode('utf-8')
+        obj = json.loads(obj)
+        login = obj["login"]
+        phone = obj["phone"]
+        password = obj["password"]
+        token = obj["token"]
+        User = get_user_model()
+        try:
+            print(type(token))
+            user = User.objects.get(number_phone=phone)
+            user.set_token(token)
+            print(user.token)
+            print(user.nickname)
+            print(user.email)
+            print("Проверка совпадений",check_password(password, user.password))
+            if check_password(password, user.password):
+                return HttpResponse(user.token, status=200)
+            else:
+                return HttpResponse(json.dumps({"error": "Неверный логин или пароль"}), status=401)
+            # return user.token(token = token)
+            # Пользователь найден, авторизация прошла успешно
+            # ... ваш код для успешной авторизации
+        except User.DoesNotExist:
+            # Пользователь не найден, авторизация не прошла
+            return HttpResponse(json.dumps({"error": "Неверный логин или пароль"}), status=401)
 
 
 @csrf_exempt
