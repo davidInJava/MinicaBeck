@@ -1,12 +1,12 @@
 import uuid
 from datetime import datetime, timedelta
-
+from django.conf import settings
 
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
-import jwt
 from profileUser.managers import UserManager
+import jwt
 
 # Create your models here.
 class User(AbstractBaseUser, PermissionsMixin):
@@ -29,6 +29,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def token(self):
         return self._generate_jwt_token()
+
+    def _del_token(self, token):
+        dt = datetime.now()
+        token['exp'] = dt.timestamp()
 
     def _generate_jwt_token(self):
         dt = datetime.now() + timedelta(days=1)
