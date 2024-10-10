@@ -17,8 +17,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=120, null=False)
     photo = models.CharField(max_length=255, null=False)
 
-
-
     objects = UserManager()
     USERNAME_FIELD = 'nickname'
     REQUIRED_FIELDS = ['role']

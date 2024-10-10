@@ -17,18 +17,15 @@ def register(request):
         obj = request.body.decode('utf-8')
         obj = json.loads(obj)
         nickname = obj["nickname"]
-        email = obj["email"]
-        role = obj["role"]
+        phone = obj["number_phone"]
         password = obj["password"]
 
         User = get_user_model()
         try:
-            new_user = User.objects.create_user(nickname=nickname, email=email, role=role, password=password)
+            new_user = User.objects.create_user(nickname=nickname, number_phone=phone, role='user', password=password)
             new_user.save()
 
             d = User.objects.get(nickname=nickname)
-
-
             return JsonResponse({'token': d.token}, status=201)
 
         except Exception as e:
