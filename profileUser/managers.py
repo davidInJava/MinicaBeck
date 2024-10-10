@@ -1,6 +1,7 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.base_user import BaseUserManager
-
-
+from django.db import models
+from django.http import JsonResponse
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
@@ -27,3 +28,36 @@ class UserManager(BaseUserManager):
             raise ValueError('Superuser must have is_superuser=True.')
 
         return self._create_user(nickname, number_phone, password, **extra_fields)
+
+class ChatManager(models.Manager):
+    use_in_migrations = True
+
+    def create_chat(self, user1_nickname, user2_nickname, name):
+        if user1_nickname == user2_nickname:
+            raise ValueError("Вы не можете написать самому себе")
+
+        user = get_user_model()
+        try:
+            user1 = user.objects.get(nickname=user1_nickname)
+            user2 = user.objects.get(nickname=user2_nickname)
+
+            existing_chat = self.filter(
+                user1__nickname=user1_nickname,
+                user2__nickname=user2_nickname
+            ).first()
+            if existing_chat:
+                return existing_chat
+
+            new_chat = self.create(
+                name=name,
+                user1=user1,
+                user2=user2
+            )
+
+            return new_chat
+
+        except user.DoesNotExist:
+            return JsonResponse({'error': 'Пользователь не найден'}, status=400)
+
+
+
