@@ -127,3 +127,22 @@ class YourConsumer(AsyncConsumer):
 
     async def websocket_disconnect(self, event):
         pass
+
+class ChatConsumer(AsyncConsumer):
+    channel_layer = get_channel_layer()
+    array_chat = None
+
+    async def websocket_connect(self, event):
+        query_string = self.scope['query_string'].decode('utf-8')
+        params = {param.split('=')[0]: param.split('=')[1] for param in query_string.split('&')}
+
+        token = params.get('token')
+        chat_uid = params.get('chatuid')
+        print(token)
+        user1 = await self.authenticate_user(token)
+        self.scope["user"] = user1
+        self.uid_chat = chat_uid
+        await self.channel_layer.group_add(f'chat_{self.uid_chat}', self.channel_name)
+        await self.send({"type": "websocket.accept"})
+
+        print(user1)

@@ -10,7 +10,7 @@ import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Monica.settings')
 
 
-from Monica.consumers import YourConsumer
+from Monica.consumers import YourConsumer, ChatConsumer
 
 
 django_asgi_app = get_asgi_application()
@@ -19,7 +19,8 @@ application = ProtocolTypeRouter({
     'http': django_asgi_app,
     'websocket': AuthMiddlewareStack(
         URLRouter([
-            path('ws', YourConsumer.as_asgi())
+            path('ws', YourConsumer.as_asgi()),
+            path('chats', ChatConsumer.as_asgi())
         ])
     )
 })
