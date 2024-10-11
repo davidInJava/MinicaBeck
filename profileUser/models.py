@@ -43,6 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             print("В иф токена")
             return self._generate_auth_token(self._token)
         else:
+            print("да это проблема токена")
             return self._generate_jwt_token()
 
     def _generate_auth_token(self, token):
@@ -60,14 +61,17 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def _generate_jwt_token(self):
         dt = datetime.now() + timedelta(days=1)
+        try:
+            token = jwt.encode({
+                'id': self.pk,
+                'exp': int(dt.timestamp()),  # Используем метод timestamp(),s
+                'nickname': self.nickname,
+            }, settings.SECRET_KEY, algorithm='HS256')
+            return token
+        except Exception as e:
+            print(e)
 
-        token = jwt.encode({
-            'id': self.pk,
-            'exp': dt.timestamp(),  # Используем метод timestamp(),s
-            'nickname': self.nickname,
-        }, settings.SECRET_KEY, algorithm='HS256')
 
-        return token
 
 
 class Chat(models.Model):
@@ -101,7 +105,7 @@ class MessageChat(models.Manager):
 
 class Messages(models.Model):
     uid_Chat = models.ForeignKey('Chat', on_delete=models.CASCADE, null=False, to_field='uid')
-    user_nickname = models.CharField(max_length=255, null=False, unique=True)
+    user_nickname = models.CharField(max_length=255, null=False, unique=False)
     date = models.DateTimeField(auto_now_add=True)
     text = models.TextField()
 

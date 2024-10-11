@@ -19,6 +19,7 @@ def register(request):
     if request.method == 'POST':
         obj = request.body.decode('utf-8')
         obj = json.loads(obj)
+        print(obj)
         nickname = obj["nickname"]
         if "number_phone" in obj.keys():
             phone = obj["number_phone"]
@@ -34,7 +35,7 @@ def register(request):
         password = obj["password"]
         User = get_user_model()
         try:
-            new_user = User.objects.create_user(nickname=nickname, number_phone=phone, email=email, role=role, password=password)
+            new_user = User.objects.create_user(nickname=nickname, number_phone=phone, email=email, role='user', password=password)
             new_user.save()
 
             d = User.objects.get(nickname=nickname)

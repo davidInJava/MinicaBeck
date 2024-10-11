@@ -10,13 +10,20 @@ class UserManager(BaseUserManager):
         """
         Создает и сохраняет пользователя с введенным им email и паролем.
         """
-        if not nickname :
+        print( 1111)
+
+        if not nickname:
             raise ValueError('не указан email или password')
         if not number_phone and not email:
-            raise ValueError('Не указан номер телефона')
+            raise ValueError('Не указаны данные')
+        print( 2222)
         user = self.model(nickname=nickname, number_phone=number_phone, **extra_fields)
         user.set_password(password)
-        user.save(using=self._db)
+        try:
+            user.save(using=self._db)
+        except Exception as e:
+            print(f'Ошибка при сохранении пользователя: {e}')
+        print("Все хорошо")
         return user
 
     def create_user(self, nickname, number_phone, password=None, **extra_fields):

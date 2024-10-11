@@ -2,15 +2,45 @@ from channels.consumer import AsyncConsumer
 from channels.layers import get_channel_layer, channel_layers
 from asgiref.sync import async_to_sync
 import json
+import datetime
 from channels.db import database_sync_to_async
 from django.conf import settings
+from django.contrib.messages import add_message
+from django.db import connection
 from profileUser.models import User
 import jwt
+
+from profileUser.models import Messages, Chat
 
 
 class YourConsumer(AsyncConsumer):
     channel_layer = get_channel_layer()
     uid_chat = None
+    array_chat = None
+
+    @database_sync_to_async
+    def get_messages(self, chat_uid, lim):
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM profileuser_messages WHERE uid_Chat_id = {chat_uid} ORDER BY date DESC LIMIT {lim}")
+            rows = cursor.fetchall()
+
+            return rows
+
+
+
+
+    @database_sync_to_async
+    def add_message(self, nickname, text, chat_uid):
+        chat_uid = int(chat_uid)
+        print(chat_uid, nickname, text)
+
+        chat = Chat.objects.get(uid=chat_uid)
+        print(chat)
+        if chat:
+            message = Messages.objects.new_message(chat_uid, nickname, text)
+            message.save()
+            return message
+
 
     @database_sync_to_async
     def get_user(self, user_id):
@@ -39,17 +69,52 @@ class YourConsumer(AsyncConsumer):
         await self.channel_layer.group_add( f'chat_{self.uid_chat}', self.channel_name)
         await self.send({"type": "websocket.accept"})
 
-    async def websocket_receive(self, text_data):
-        print("111111111111111")
-        # data = json.loads(text_data)
-        print(json.loads(text_data['text'])['message'], self.uid_chat)
+        self.array_chat = await self.get_messages(chat_uid, 50)
+        js = {}
+        a = 0
+        for i in self.array_chat:
+            js[str(a)] = {
+                'nickname': i[1],
+                'time': i[2].isoformat(),
+                'message': i[3],
+            }
+            a += 1
 
         await self.channel_layer.group_send(
             f'chat_{self.uid_chat}',  # Имя группы
             {  # Сообщение
                 'type': 'chat_message',
                 'chat_uid': self.uid_chat,
-                'message': json.loads(text_data['text'])['message']
+                'messages': js
+            }
+        )
+
+    async def websocket_receive(self, text_data):
+
+        uid = self.uid_chat
+        nickname = json.loads(text_data["text"])['nickname']
+        text = json.loads(text_data["text"])['message']
+
+        a = await self.add_message(nickname,text, uid)
+        self.array_chat = await self.get_messages(uid, 50)
+        js = {}
+        a = 0
+        for i in self.array_chat:
+            js[str(a)]= {
+                'nickname': i[1],
+                'time': i[2].isoformat(),
+                'message': i[3],
+            }
+            a+=1
+
+
+
+        await self.channel_layer.group_send(
+            f'chat_{self.uid_chat}',  # Имя группы
+            {  # Сообщение
+                'type': 'chat_message',
+                'chat_uid': self.uid_chat,
+                'messages': js
             }
         )
 
@@ -57,7 +122,7 @@ class YourConsumer(AsyncConsumer):
         print("Sending message:", event)
         await self.send({
             "type": "websocket.send",
-            "text": event['message']
+            "text": json.dumps(event)  # Преобразуем словарь в JSON
         })
 
     async def websocket_disconnect(self, event):
