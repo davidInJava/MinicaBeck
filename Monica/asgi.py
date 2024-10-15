@@ -7,10 +7,13 @@ from django.urls import path
 
 
 import os
+
+from Monica.ConsumerChat import ChatConsumer
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Monica.settings')
 
 
-from Monica.consumers import YourConsumer, ChatConsumer
+from Monica.consumers import YourConsumer
 
 
 django_asgi_app = get_asgi_application()

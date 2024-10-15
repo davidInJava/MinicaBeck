@@ -8,7 +8,7 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 import jwt
 from django.db import connection
-from .models import Chat
+from .models import Chat, User
 
 # Create your views here.
 def index(request):
@@ -140,9 +140,15 @@ def get_chat(request):
                     user2__nickname=user2_nickname
                 ).first()
 
+                existing_chat2 = Chat.objects.filter(
+                    user1__nickname=user2_nickname,
+                    user2__nickname=user1_nickname
+                ).first()
+
                 if existing_chat:
                     return JsonResponse({'chat_id': existing_chat.uid, 'message': 'Chat already exists.'}, status=200)
-
+                if existing_chat2:
+                    return JsonResponse({'chat_id': existing_chat2.uid, 'message': 'Chat already exists.'}, status=200)
                 # Create a new chat if it doesn't exist
                 new_chat = Chat.objects.create_chat(user1_nickname, user2_nickname, f"Chat between {user1_nickname} and {user2_nickname}")
                 print(new_chat, '1213123')
@@ -158,5 +164,22 @@ def get_chat(request):
                 return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+
+def get_user_info(request):
+    if request.method == 'POST':
+        token = request.META.get('HTTP_AUTHORIZATION')  # Extract the token from the header
+        if token and token.startswith('Bearer '):
+            token = token.split(' ')[1]  # Remove 'Bearer ' from the token
+            try:
+                decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+                obj = request.body.decode('utf-8')
+                obj = json.loads(obj)
+                user = obj["nickname"]
+
+
+                user = User.objects.get(nickname=user)
+            except:
+                return JsonResponse({'error': 'Invalid token.'}, status=401)
 
 
